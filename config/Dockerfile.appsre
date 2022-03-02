@@ -1,9 +1,24 @@
 # Cumulative Dockerfile for app-sre. It should start FROM the base image
 # and then RUN all the build scripts in order.
-FROM registry.ci.openshift.org/openshift/release:golang-1.16
+FROM registry.access.redhat.com/ubi8/ubi
+USER root
 
-COPY build_image-v2.0.0.sh /build.sh
+RUN dnf update -y && \
+    dnf install -y python3-pip go-toolset make git && \
+    dnf clean all --enablerepo=\*
+
+ENV GOOS=linux \
+    GOPATH=/go/ \
+    GOCACHE="/tmp/cache/go-cache"
+
+RUN mkdir $GOPATH && mkdir -p $GOCACHE && \
+    chmod g+xw -R $GOPATH && \
+    chmod g+xw -R $GOCACHE
+
+COPY build_image-v3.0.0.sh /build.sh
 RUN /build.sh && rm -f /build.sh
 
 COPY build.sh /build.sh
 RUN /build.sh && rm -f /build.sh
+
+
